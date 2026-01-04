@@ -15,8 +15,8 @@ Create a `.env` with your connection related information.
 ```ini
 MATRIX_HOMESERVER=https://matrix.mopore.org
 MATRIX_ROOM_ID=!lAqkoanigxgSGNfDzT:matrix.mopore.org
-HUMAN_USER_ID=@jni:matrix.mopore.org
-BOT_ACCESS_TOKEN=<your access token>
+MATRIX_HUMAN_ID=@jni:matrix.mopore.org
+MATRIX_BOT_ACCESS_TOKEN='<your access token>'
 ```
 
 ### Requesting the Access Token for the Bot Account
