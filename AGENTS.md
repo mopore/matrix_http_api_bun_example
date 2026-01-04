@@ -18,13 +18,16 @@ via direct HTTP API calls (no SDK) in an unencrypted room.
 bun install
 
 # Run the application
-bun run index.ts
+bun run src/index.ts
 
 # Type check (no emit)
 bun run tsc --noEmit
 
+# Lint
+bun lint
+
 # Run with env file
-bun --env-file=.env run index.ts
+bun --env-file=.env run src/index.ts
 ```
 
 ### Testing
@@ -53,10 +56,9 @@ Test files should use `*.test.ts` or `*.spec.ts` suffix.
 
 Required in `.env`:
 - `MATRIX_HOMESERVER` - Matrix server URL (default: https://matrix.mopore.org)
-- `MATRIX_ACCESS_TOKEN` - Bot's access token (required)
+- `MATRIX_BOT_ACCESS_TOKEN` - Bot's access token (required)
 - `MATRIX_ROOM_ID` - Target room ID (required)
-- `JNI_USER_ID` - Human user ID to respond to
-- `MATRIX_STATE_FILE` - Sync state persistence file (default: ./matrix_state.json)
+- `MATRIX_USER_ID` - Human user ID to respond to
 
 ---
 
@@ -83,11 +85,11 @@ Strict mode enabled with these key flags:
 
 ### Naming Conventions
 
-- **Variables/Functions:** camelCase (`sendTextAsync`, `loadStateAsync`)
+- **Variables/Functions:** camelCase (`sendMessageAsync`, `syncOnceAsync`)
 - **Async functions:** Suffix with `Async` (`whoamiAsync`, `syncOnceAsync`)
-- **Types/Interfaces:** PascalCase (`State`, `SyncResponse`)
-- **Constants:** UPPER_SNAKE_CASE for env-derived (`HS`, `TOKEN`, `ROOM_ID`)
-- **Files:** snake_case for project name, otherwise lowercase
+- **Types/Interfaces:** PascalCase (`MatrixEvent`, `SyncResponse`)
+- **Constants:** UPPER_SNAKE_CASE for env-derived (`SERVER_URL`, `BOT_TOKEN`, `ROOM_ID`)
+- **Files:** camelCase for TypeScript files (`matrixHttpApi.ts`)
 
 ### Function Definitions
 
@@ -95,10 +97,10 @@ Use arrow functions, not classical function declarations:
 
 ```typescript
 // Correct - arrow function
-const loadStateAsync = async (): Promise<State> => {
-    const f = Bun.file(STATE_FILE);
-    if (!(await f.exists())) return {};
-    return (await f.json()) as State;
+const processEventsAsync = async (events: MatrixEvent[]): Promise<void> => {
+    for (const ev of events) {
+        // process event
+    }
 };
 
 // Correct - arrow function with parameters
@@ -111,7 +113,7 @@ const sendTextAsync = async (roomId: string, body: string): Promise<void> => {
 };
 
 // Incorrect - classical function declaration
-async function loadState(): Promise<State> { ... }
+async function processEvents(): Promise<void> { ... }
 ```
 
 ### Imports
@@ -146,7 +148,12 @@ const data = (await apiAsync("/endpoint")) as any;
 
 ```typescript
 // Prefer type aliases for object shapes
-type State = { since?: string };
+type MatrixClientConfig = {
+    homeserver: string;
+    botAccessToken: string;
+    roomId: string;
+    humanUserId: string;
+};
 
 // Use `as` for API response typing (external data)
 const data = (await response.json()) as SomeType;
@@ -158,13 +165,6 @@ const data = (await response.json()) as SomeType;
 // Throw descriptive errors for critical failures
 if (!TOKEN || !ROOM_ID) {
     throw new Error("Missing MATRIX_ACCESS_TOKEN or MATRIX_ROOM_ID");
-}
-
-// Use try-catch with fallback for recoverable errors
-try {
-    return (await file.json()) as State;
-} catch {
-    return {};
 }
 
 // Log and continue for loop errors
@@ -179,7 +179,7 @@ try {
 ### Async Patterns
 
 - Use async/await (no raw Promises)
-- IIFE for top-level async: `(async () => { ... })()`
+- Top-level await supported in Bun (no IIFE needed)
 - Use `while (true)` for long-polling loops
 
 ### Bun-Specific APIs
@@ -217,9 +217,10 @@ if (!res.ok) {
 ## Project Structure
 
 ```
-index.ts          # Main entry point (all code currently here)
-.env              # Environment config (not committed)
-matrix_state.json # Sync state persistence (not committed)
+src/
+  index.ts          # Main entry point, example bot usage
+  matrixHttpApi.ts  # Matrix API module with callbacks
+.env                # Environment config (not committed)
 ```
 
 ---
@@ -227,7 +228,7 @@ matrix_state.json # Sync state persistence (not committed)
 ## Git Practices
 
 - Keep commits concise
-- Don't commit `.env` or `matrix_state.json`
+- Don't commit `.env`
 - Request approval before pushing
 
 ---
