@@ -5,6 +5,8 @@
 Matrix HTTP API example using Bun runtime. A bot that communicates with Matrix homeserver
 via direct HTTP API calls (no SDK) in an unencrypted room.
 
+**Why no SDK?** This project avoids the official Matrix JS SDK due to compatibility issues between the SDK's crypto sublibraries and the Bun runtime. It is **not** a general restriction on 3rd party libraries. You are free to use other libraries (e.g., for environment variables, logging, or state management) as needed. **Prefer native Bun features (e.g. `Bun.env`, `Bun.sqlite`, `Bun.password`) where available over 3rd party libraries.**
+
 **Runtime:** Bun (not Node.js)
 **Language:** TypeScript (strict mode)
 **Module System:** ESM (`"type": "module"`)
